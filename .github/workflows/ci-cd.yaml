@@ -112,15 +112,6 @@ jobs:
       working-directory: terraform
       run: terraform plan -var-file=auto.tfvars -input=false -no-color
     
-    - name: ✅ Manual Approval
-      uses: trstringer/manual-approval@v1
-      with:
-        secret: ${{ github.token }}
-        approvers: ${{ github.actor }}
-        minimum-approvals: 1
-        issue-title: "Deploy to Production"
-        issue-body: "Please review the terraform plan above and approve deployment to production."
-    
     - name: Terraform Apply
       working-directory: terraform
       run: terraform apply -var-file=auto.tfvars -input=false -auto-approve
