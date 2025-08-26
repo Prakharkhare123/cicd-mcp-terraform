@@ -116,9 +116,10 @@ jobs:
       uses: trstringer/manual-approval@v1
       with:
         secret: ${{ github.token }}
-        approvers: ${{ secrets.APPROVERS_CSV }}
+        approvers: ${{ github.actor }}
         minimum-approvals: 1
-        timeout-minutes: 60
+        issue-title: "Deploy to Production"
+        issue-body: "Please review the terraform plan above and approve deployment to production."
     
     - name: Terraform Apply
       working-directory: terraform
