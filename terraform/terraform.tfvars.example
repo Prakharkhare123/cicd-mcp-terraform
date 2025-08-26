@@ -1,0 +1,3 @@
+image = "docker.io/<your-docker-username>/ai-demo:latest"
+replicas = 2
+service_type = "LoadBalancer"

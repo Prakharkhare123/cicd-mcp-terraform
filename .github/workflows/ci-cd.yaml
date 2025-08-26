@@ -1,0 +1,95 @@
+name: CI-CD
+EOF
+shell: bash
+
+
+- name: Save artifact
+uses: actions/upload-artifact@v4
+with:
+name: tfvars
+path: dist/auto.tfvars
+
+
+terraform-plan:
+needs: build-and-push
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v4
+- uses: actions/download-artifact@v4
+with:
+name: tfvars
+path: terraform
+
+
+- name: Setup Terraform
+uses: hashicorp/setup-terraform@v3
+
+
+- name: Write kubeconfig
+run: echo "${KUBECONFIG_B64}" | base64 -d > $HOME/.kube/config
+env:
+KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+
+
+- name: Terraform Init
+working-directory: terraform
+run: terraform init -input=false
+
+
+- name: Terraform Validate
+working-directory: terraform
+run: terraform validate
+
+
+- name: Terraform Plan
+working-directory: terraform
+run: terraform plan -input=false -no-color
+
+
+terraform-apply:
+if: github.ref == 'refs/heads/main'
+needs: terraform-plan
+runs-on: ubuntu-latest
+environment:
+name: production
+url: https://example.com
+steps:
+- uses: actions/checkout@v4
+- uses: actions/download-artifact@v4
+with:
+name: tfvars
+path: terraform
+
+
+- name: Setup Terraform
+uses: hashicorp/setup-terraform@v3
+
+
+- name: Write kubeconfig
+run: echo "${KUBECONFIG_B64}" | base64 -d > $HOME/.kube/config
+env:
+KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+
+
+- name: Terraform Init
+working-directory: terraform
+run: terraform init -input=false
+
+
+- name: Terraform Plan (for approval log)
+working-directory: terraform
+run: terraform plan -input=false -no-color
+
+
+- name: ✅ Manual Approval
+uses: trstringer/manual-approval@v1
+with:
+secret: ${{ github.token }}
+approvers: ${{ secrets.APPROVERS_CSV }}
+minimum-approvals: 1
+timeout-minutes: 60
+
+
+- name: Terraform Apply
+working-directory: terraform
+run: terraform apply -input=false -auto-approve
