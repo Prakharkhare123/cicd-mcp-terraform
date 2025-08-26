@@ -31,12 +31,18 @@ port { container_port = 8080 }
 
 # ✅ Health checks ensure traffic only routes to ready pods
 readiness_probe {
-http_get { path = "/health" port = 8080 }
+http_get {
+path = "/health"
+port = 8080
+}
 initial_delay_seconds = 3
 period_seconds = 5
 }
 liveness_probe {
-http_get { path = "/health" port = 8080 }
+http_get {
+path = "/health"
+port = 8080
+}
 initial_delay_seconds = 10
 period_seconds = 10
 }
@@ -71,7 +77,10 @@ labels = { app = var.app_name }
 
 spec {
 selector = { app = var.app_name }
-port { port = 80, target_port = 8080 }
+port {
+port = 80
+target_port = 8080
+}
 type = var.service_type
 }
 }
