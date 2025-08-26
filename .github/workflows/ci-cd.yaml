@@ -35,7 +35,7 @@ jobs:
         app_name = "ai-cicd-app"
         namespace = "default"
         replicas = 2
-        service_type = "LoadBalancer"
+        service_type = "ClusterIP"
         EOF
     
     - name: Save artifact
@@ -58,13 +58,15 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
     
-    - name: Create kubeconfig directory
-      run: mkdir -p $HOME/.kube
-    
-    - name: Write kubeconfig
-      run: echo "${KUBECONFIG_B64}" | base64 -d > $HOME/.kube/config
-      env:
-        KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+    - name: Create KIND cluster
+      uses: helm/kind-action@v1.10.0
+      with:
+        cluster_name: ci-cluster
+        config: |
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          nodes:
+          - role: control-plane
     
     - name: Terraform Init
       working-directory: terraform
@@ -96,13 +98,15 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
     
-    - name: Create kubeconfig directory
-      run: mkdir -p $HOME/.kube
-    
-    - name: Write kubeconfig
-      run: echo "${KUBECONFIG_B64}" | base64 -d > $HOME/.kube/config
-      env:
-        KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+    - name: Create KIND cluster
+      uses: helm/kind-action@v1.10.0
+      with:
+        cluster_name: ci-cluster
+        config: |
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          nodes:
+          - role: control-plane
     
     - name: Terraform Init
       working-directory: terraform

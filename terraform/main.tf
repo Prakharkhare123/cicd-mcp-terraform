@@ -1,12 +1,7 @@
-resource "kubernetes_namespace" "ns" {
-metadata { name = var.namespace }
-}
-
-
 resource "kubernetes_deployment" "app" {
 metadata {
 name = var.app_name
-namespace = kubernetes_namespace.ns.metadata[0].name
+namespace = var.namespace
 labels = { app = var.app_name }
 }
 
@@ -70,7 +65,7 @@ max_unavailable = 0
 resource "kubernetes_service" "svc" {
 metadata {
 name = "${var.app_name}-svc"
-namespace = kubernetes_namespace.ns.metadata[0].name
+namespace = var.namespace
 labels = { app = var.app_name }
 }
 
