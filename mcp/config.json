@@ -1,13 +1,11 @@
 {
-"mcpServers": {
-"filesystem": { "command": "node", "args": ["-e", "console.log('fs tool placeholder')"] },
-"terraform": {
-"command": "bash",
-"args": ["-lc", "which terraform >/dev/null && echo 'terraform ready' || echo 'install terraform'"]
-},
-"kubectl": {
-"command": "bash",
-"args": ["-lc", "which kubectl >/dev/null && echo 'kubectl ready' || echo 'install kubectl'"]
-}
-}
+  "mcpServers": {
+    "ai-infrastructure": {
+      "command": "node",
+      "args": ["./mcp/server.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
 }

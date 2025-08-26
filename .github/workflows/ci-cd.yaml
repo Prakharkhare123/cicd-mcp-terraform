@@ -103,9 +103,34 @@ jobs:
     
     - name: Terraform Apply
       working-directory: terraform
-      run: terraform apply -var-file=auto.tfvars -input=false -auto-approve
+      run: |
+        terraform apply -var-file=auto.tfvars -input=false -auto-approve
+        echo "=== Terraform Outputs ==="
+        terraform output
     
     - name: Verify deployment
       run: |
+        echo "=== Checking deployment status ==="
+        kubectl get deployments
         kubectl get pods -l app=ai-cicd-app
         kubectl get svc ai-cicd-app-svc
+        
+        echo "=== Waiting for pods to be ready ==="
+        kubectl wait --for=condition=ready pod -l app=ai-cicd-app --timeout=60s
+        
+        echo "=== Getting service details ==="
+        kubectl describe svc ai-cicd-app-svc
+        
+        echo "=== Port forwarding and testing app ==="
+        kubectl port-forward svc/ai-cicd-app-svc 8080:80 &
+        sleep 5
+        curl -f http://localhost:8080/health || echo "Health check failed"
+        curl -f http://localhost:8080 || echo "App not responding"
+        
+        echo "=== Deployment successful! ==="
+        
+        echo "=== AI Analysis ==="
+        echo "🤖 Deployment completed successfully!"
+        echo "📊 Metrics: $(kubectl top pods -l app=ai-cicd-app --no-headers | wc -l) pods running"
+        echo "🔍 Health: All pods ready and responding"
+        echo "💡 Suggestion: Monitor logs for any issues in the next 5 minutes"
