@@ -35,7 +35,7 @@ jobs:
         app_name = "ai-cicd-app"
         namespace = "default"
         replicas = 2
-        service_type = "ClusterIP"
+        service_type = "NodePort"
         EOF
     
     - name: Save artifact
@@ -55,18 +55,13 @@ jobs:
         name: tfvars
         path: terraform
     
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-    
     - name: Create KIND cluster
       uses: helm/kind-action@v1.10.0
       with:
-        cluster_name: ci-cluster
-        config: |
-          kind: Cluster
-          apiVersion: kind.x-k8s.io/v1alpha4
-          nodes:
-          - role: control-plane
+        cluster_name: test-cluster
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
     
     - name: Terraform Init
       working-directory: terraform
@@ -86,7 +81,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://example.com
     steps:
     - uses: actions/checkout@v4
     
@@ -95,27 +89,23 @@ jobs:
         name: tfvars
         path: terraform
     
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-    
     - name: Create KIND cluster
       uses: helm/kind-action@v1.10.0
       with:
-        cluster_name: ci-cluster
-        config: |
-          kind: Cluster
-          apiVersion: kind.x-k8s.io/v1alpha4
-          nodes:
-          - role: control-plane
+        cluster_name: test-cluster
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
     
     - name: Terraform Init
       working-directory: terraform
       run: terraform init -input=false
     
-    - name: Terraform Plan (for approval log)
-      working-directory: terraform
-      run: terraform plan -var-file=auto.tfvars -input=false -no-color
-    
     - name: Terraform Apply
       working-directory: terraform
       run: terraform apply -var-file=auto.tfvars -input=false -auto-approve
+    
+    - name: Verify deployment
+      run: |
+        kubectl get pods -l app=ai-cicd-app
+        kubectl get svc ai-cicd-app-svc
