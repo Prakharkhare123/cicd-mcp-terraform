@@ -31,8 +31,11 @@ jobs:
     - name: Generate Terraform variables
       run: |
         cat > auto.tfvars << EOF
-        image_tag = "${{ github.sha }}"
-        dockerhub_username = "${{ secrets.DOCKERHUB_USERNAME }}"
+        image = "${{ secrets.DOCKERHUB_USERNAME }}/ai-cicd-app:${{ github.sha }}"
+        app_name = "ai-cicd-app"
+        namespace = "default"
+        replicas = 2
+        service_type = "LoadBalancer"
         EOF
     
     - name: Save artifact
@@ -73,7 +76,7 @@ jobs:
     
     - name: Terraform Plan
       working-directory: terraform
-      run: terraform plan -input=false -no-color
+      run: terraform plan -var-file=auto.tfvars -input=false -no-color
 
   terraform-apply:
     if: github.ref == 'refs/heads/main'
@@ -107,7 +110,7 @@ jobs:
     
     - name: Terraform Plan (for approval log)
       working-directory: terraform
-      run: terraform plan -input=false -no-color
+      run: terraform plan -var-file=auto.tfvars -input=false -no-color
     
     - name: ✅ Manual Approval
       uses: trstringer/manual-approval@v1
@@ -119,4 +122,4 @@ jobs:
     
     - name: Terraform Apply
       working-directory: terraform
-      run: terraform apply -input=false -auto-approve
+      run: terraform apply -var-file=auto.tfvars -input=false -auto-approve
